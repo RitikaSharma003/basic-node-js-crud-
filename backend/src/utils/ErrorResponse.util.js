@@ -1,5 +1,5 @@
 class ErrorResponse extends Error{
-    constructor(messgage,statusCode)
+    constructor(message,statusCode)
     {
         super(message)
         

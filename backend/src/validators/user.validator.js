@@ -5,7 +5,7 @@ export const registerUserSchema=Joi.object({
     password:Joi.string().required().min(4).max(90),
     firstName:Joi.string().min(3).max(50).optional(),
     lastName:Joi.string().min(3).max(50).optional(),
-    color:Joi.number().min(1).max(90).optional(),
+    color:Joi.number().min(1).max(90).optional().allow(''),
       profileSetup: Joi.boolean().optional(),
 });
 
@@ -21,6 +21,6 @@ export const updatedUserSchema=Joi.object({
     password:Joi.string().required().min(4).max(90),
     firstName:Joi.string().min(3).max(50).optional(),
     lastName:Joi.string().min(3).max(50).optional(),
-    color:Joi.number().min(1).max(90).optional(),
+    color:Joi.number().min(1).max(90).optional().allow(''),
       profileSetup: Joi.boolean().optional(),
 })

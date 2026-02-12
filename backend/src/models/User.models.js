@@ -27,8 +27,10 @@ trim:true,
 
     },
     profileImage:{
-        type:String,
-        trim:true,
+     
+  url: { type: String, },
+  public_id: { type: String },default:{},
+
 
     },
     color:{

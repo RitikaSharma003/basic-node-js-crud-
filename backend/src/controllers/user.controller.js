@@ -2,10 +2,33 @@ import asyncHandler from "express-async-handler";
 import UserModel from "../models/user.models.js";
 import { generateToken } from "../utils/jwt.utils.js";
 import ErrorResponse from "../utils/ErrorResponse.util.js";
+import { uploadImage } from "../utils/cloudinary.util.js";
+import {v2 as cloudinary} from "cloudinary";
+
+const getDataURL = (bufferValue, mimetype) => {
+  const b64 = bufferValue.toString("base64");
+  return `data:${mimetype};base64,${b64}`;
+};
+
+
 export const register=asyncHandler(async(req,res,next)=>{
 const {email,password,firstName,lastName,color,profileSetup}=req.body;
+let imageDetails={url:"",public_id:""};
+if(req.file)
+{
+    const dataURL=getDataURL(req.file.buffer,req.file.mimetype);
+    const uploadedImage=await uploadImage(dataURL);
 
-const newUser=await UserModel.create({email,password,firstName,lastName,color,profileSetup});
+
+if(uploadedImage)
+{
+    imageDetails={
+url:uploadedImage.secure_url,
+public_id:uploadedImage.public_id
+    };
+
+}}
+const newUser=await UserModel.create({email,password,firstName,lastName,color,profileSetup,profileImage:imageDetails});
 
 
 res.status(201).json({
@@ -136,13 +159,38 @@ const user=await UserModel.findByIdAndDelete(userId);
 
 export const updateUser=asyncHandler(async(req,res,next)=>{
 const userId=req.params.id;
+let updateData={...req.body};
+if(req.file)
+{
+    const user=await UserModel.findById(userId);
+    if(!user)
+    {
+        return next(new ErrorResponse("No user found",404));
 
-const updateUser=await UserModel.findByIdAndUpdate(userId,req.body,{
+    }
+
+    if(user.profileImage && user.profileImage.public_id)
+    {
+        await cloudinary.uploader.destroy(user.profileImage.public_id);
+
+    }
+    const dataURL=getDataURL(req.file.buffer,req.file.mimetype);
+    const uploadedImage=await uploadImage(dataURL);
+    if(uploadedImage)
+    {
+        updateData.profileImage={
+            url:uploadedImage.secure_url,
+            public_id:uploadedImage.public_id
+        }
+    }
+}
+
+const updatedUser=await UserModel.findByIdAndUpdate(userId, updateData,{
     new:true,runValidators:true
 })
 
 
-if(!updateUser)
+if(!updatedUser)
 {
     return next(new ErrorResponse("No user found",404));
 
@@ -150,7 +198,7 @@ if(!updateUser)
 res.status(200).json({
         success: true,
         message: "Profile updated successfully!",
-        data: updateUser,
+        data: updatedUser,
     });
 });
 
